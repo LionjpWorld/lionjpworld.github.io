@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Food</title>
+    <!-- <link rel="shortcut icon" href="assets/images/favicon.ico"> -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/audio-manager/libs/howler.core.min.js"></script>
+    <script src="assets/js/audio-manager/audio-manager.js"></script>
+  </head>
+  <body>
+      <!-- add -->
+      <div id="warning">
+          <h1>
+              Please play game on landscape.
+          </h1>
+          <br>
+          <div style="width: 300px;margin:0px auto;">
+              <img src="assets/images/flip.png" alt="rotate" />
+          </div>
+      </div>
+      <!-- add -->
+      <div id="unity-container" class="game-container mobile">
+          <div class="game-content" width=960 height=600>
+              <div class="loader-container">
+                  <div class="loader-progress"></div>
+              </div>
+              <canvas id="game-instance" class="game-instance"></canvas>
+              <div id="unity-warning"></div>
+          </div>
+      </div>
+      <style>
+          @media screen and (orientation:portrait) {
+
+              #unity-container {
+                  display: none;
+              }
+
+              #warning {
+                  width: 100vw;
+                  height: 100vh;
+                  display: block;
+                  padding-top: 30vh;
+              }
+
+              #warning h1 {
+                  color: #f00;
+                  font-size: 4em;
+              }
+
+              /*#unity-container {
+                  height: 100vw !important;
+                  width: 100vh !important;
+                  background-color: #202020;
+                  -webkit-transform: rotate(90deg);
+                  -moz-transform: rotate(90deg);
+                  -o-transform: rotate(90deg);
+                  transform: rotate(90deg);
+                  transform-origin: top left;
+                  position: absolute;
+                  top: 0 !important;
+                  left: 100vw;
+              }*/
+          }
+
+          @media screen and (orientation:landscape) {
+              #warning {
+                  display: none;
+              }
+          }
+      </style>
+      <script src="assets/js/init.js?v=1"></script>
+      <!--  進遊戲時接收API遊戲名稱，更改頁籤顯示名稱  -->
+      <script> 
+        /*   
+          Change website title to current game name. 
+        */ 
+        function autoSettingWebsiteTitle() { 
+          document.title = "Loading Title..."; 
+       
+          const queryString = window.location.search; 
+          const urlParams = new URLSearchParams(queryString); 
+          const gameID = urlParams.get('GameID') 
+          const channelID = urlParams.get('ChannelID') 
+       
+          fetch(`${location.protocol}//${location.host}/HttpsApi/gameInfo/${gameID}/${channelID}`, { 
+            method: 'GET', 
+            headers: { 
+              'Accept': 'application/json', 
+            }, 
+          }).then(response => response.text()) 
+            .then((text) => { 
+              const jsonObj = JSON.parse(text); 
+              if (jsonObj && jsonObj.data && jsonObj.data.GameName) { 
+                document.title = jsonObj.data.GameName; 
+              } else { 
+                document.title = "Game"; 
+              } 
+            }).catch(error => { 
+              document.title = "Game"; 
+              console.error("Failed to fetch game name!", error); 
+            }); 
+        } 
+       
+        autoSettingWebsiteTitle(); 
+      </script>
+      <script>
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector(".game-instance");
+      var warningBanner = document.querySelector("#unity-warning");
+
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/Random2.loader.js";
+      var config = {
+        dataUrl: buildUrl + "/Random2.data.unityweb",
+        frameworkUrl: buildUrl + "/Random2.framework.js.unityweb",
+        codeUrl: buildUrl + "/Random2.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Food",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
+
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          loaderProgress.innerText = "";
+        }).then((unityInstance) => {
+          loaderContainer.remove();
+          loaderContainer = undefined;
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+          document.body.appendChild(script);
+
+      //add js
+      window.addEventListener("orientationchange", (event) => {
+          console.log(`the orientation of the device is now ${event.target.screen.orientation.angle}`);
+          if (Math.abs(event.target.screen.orientation.angle) == 90) {
+              window.location.reload();
+          }
+      });
+      //add js end
+      </script>
+  </body>
+</html>
